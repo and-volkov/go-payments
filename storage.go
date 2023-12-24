@@ -70,6 +70,11 @@ func (s *PostgresStorage) CreateAccount(account *Account) error {
 }
 
 func (s *PostgresStorage) DeleteAccount(id int) error {
+	query := `DELETE FROM account where id = $1`
+	_, err := s.db.Query(query, id)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -78,7 +83,25 @@ func (s *PostgresStorage) UpdateAccount(account *Account) error {
 }
 
 func (s *PostgresStorage) GetAccountById(id int) (*Account, error) {
-	return nil, nil
+	query := `SELECT id, first_name, last_name, number, balance, created_at FROM account where id = $1`
+	res, err := s.db.Query(query, id)
+	if err != nil {
+		return nil, err
+	}
+	account := new(Account)
+	if res.Next() {
+		if err := res.Scan(
+			&account.ID,
+			&account.FirstName,
+			&account.LastName,
+			&account.Number,
+			&account.Balance,
+			&account.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+	}
+	return account, nil
 }
 
 func (s *PostgresStorage) GetAccounts() ([]*Account, error) {
